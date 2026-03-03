@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = "startup-game"
 include("app")
+include("services:auth-service")

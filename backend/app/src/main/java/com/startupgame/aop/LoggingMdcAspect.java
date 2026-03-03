@@ -20,7 +20,7 @@ public class LoggingMdcAspect {
 
     private final UserRepository userRepository;
 
-    @Before("execution(* com.startupgame.service..*(..))")
+    @Before("execution(* com.startupgame.modules.*.service..*(..))")
     public void beforeServiceCall() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
