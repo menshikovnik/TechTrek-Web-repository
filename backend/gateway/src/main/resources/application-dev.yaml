@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: auth_route
+              uri: http://localhost:8080
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - StripPrefix=1
