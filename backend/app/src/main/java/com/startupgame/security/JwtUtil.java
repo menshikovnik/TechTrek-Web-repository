@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +18,19 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String SECRET_KEY;
+    private final SecretKey key;
+
+    public JwtUtil(@Value("${JWT_SECRET}") String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    //15 min
+    private static final long ACCESS_TOKEN_VALIDITY = Duration.ofMinutes(15).toMillis();
+
+    //7 days
+    private static final long REFRESH_TOKEN_VALIDITY = Duration.ofDays(7).toMillis();
+
+
 
 
     public String extractUsername(String token) {
@@ -35,7 +47,7 @@ public class JwtUtil {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSecretKey())
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -63,19 +75,15 @@ public class JwtUtil {
                 .subject(subject)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + expiration))
-                .signWith(getSecretKey())
+                .signWith(key)
                 .compact();
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        //15 min
-        long ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000;
         return generateToken(userDetails, ACCESS_TOKEN_VALIDITY);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        //7 days
-        long REFRESH_TOKEN_VALIDITY = 7L * 24 * 60 * 60 * 1000;
         return generateToken(userDetails, REFRESH_TOKEN_VALIDITY);
     }
 
@@ -90,9 +98,4 @@ public class JwtUtil {
             return false;
         }
     }
-
-    private SecretKey getSecretKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-    }
-
 }
